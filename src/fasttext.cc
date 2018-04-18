@@ -633,13 +633,32 @@ void FastText::loadVectors(std::string filename) {
   dict_->threshold(1, 0);
   dict_->init();
   input_ = std::make_shared<Matrix>(dict_->nwords()+args_->bucket, args_->dim);
-  input_->uniform(1.0 / args_->dim);
+//  input_->uniform(1.0 / args_->dim);
+  input_->zero();
 
   for (size_t i = 0; i < n; i++) {
     int32_t idx = dict_->getId(words[i]);
     if (idx < 0 || idx >= dict_->nwords()) continue;
     for (size_t j = 0; j < dim; j++) {
       input_->at(idx, j) = mat->at(i, j);
+    }
+    std::vector<int32_t> subwords = dict_->getSubwords(idx);
+    for (int32_t subwordId : subwords) {
+      for (size_t j = 0; j < dim; j++) {
+          input_->at(subwordId, j) = mat->at(i, j);
+      }
+    }
+  }
+
+  std::cout << "norming" << std::endl;
+
+  Vector norms(input_->size(0));
+  input_->l2NormRow(norms);
+  for (int32_t row = dict_->nwords(); row < input_->size(0); row++) {
+    for (size_t d = 0; d < dim; d++) {
+      if (norms[row] > 0) {
+        input_->at(row, d) = input_->at(row, d) / norms[row];
+      }
     }
   }
 }
