@@ -627,6 +627,7 @@ void FastText::loadVectors(std::string filename) {
     for (size_t j = 0; j < dim; j++) {
       in >> mat->at(i, j);
     }
+    in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
   }
   in.close();
 
@@ -649,8 +650,6 @@ void FastText::loadVectors(std::string filename) {
       }
     }
   }
-
-  std::cout << "norming" << std::endl;
 
   Vector norms(input_->size(0));
   input_->l2NormRow(norms);
